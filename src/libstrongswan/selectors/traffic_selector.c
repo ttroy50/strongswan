@@ -220,8 +220,7 @@ int traffic_selector_printf_hook(printf_hook_data_t *data,
 	char from_str[INET6_ADDRSTRLEN] = "";
 	char to_str[INET6_ADDRSTRLEN] = "";
 	char *serv_proto = NULL;
-	bool has_proto;
-	bool has_ports;
+	bool has_proto, has_ports, first = TRUE;
 	size_t written = 0;
 	u_int32_t from[4], to[4];
 
@@ -235,8 +234,8 @@ int traffic_selector_printf_hook(printf_hook_data_t *data,
 		enumerator = list->create_enumerator(list);
 		while (enumerator->enumerate(enumerator, (void**)&this))
 		{
-			/* call recursivly */
-			written += print_in_hook(data, "%R ", this);
+			written += print_in_hook(data, "%s%R", first ? "" : " ", this);
+			first = FALSE;
 		}
 		enumerator->destroy(enumerator);
 		return written;
