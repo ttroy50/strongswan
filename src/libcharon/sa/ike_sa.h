@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2014 Tobias Brunner
+ * Copyright (C) 2006-2015 Tobias Brunner
  * Copyright (C) 2006 Daniel Roethlisberger
  * Copyright (C) 2005-2009 Martin Willi
  * Copyright (C) 2005 Jan Hutter
@@ -500,6 +500,14 @@ struct ike_sa_t {
 	 * @return				enumerator over auth_cfg_t
 	 */
 	enumerator_t* (*create_auth_cfg_enumerator)(ike_sa_t *this, bool local);
+
+	/**
+	 * Verify the trustchains (validity, revocation) in completed public key
+	 * auth rounds.
+	 *
+	 * @return				TRUE if certificates were valid, FALSE otherwise
+	 */
+	bool (*verify_peer_certificate)(ike_sa_t *this);
 
 	/**
 	 * Get the selected proposal of this IKE_SA.
