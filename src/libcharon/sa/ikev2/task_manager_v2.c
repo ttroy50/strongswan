@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2014 Tobias Brunner
+ * Copyright (C) 2007-2015 Tobias Brunner
  * Copyright (C) 2007-2010 Martin Willi
  * Hochschule fuer Technik Rapperswil
  *
@@ -618,7 +618,7 @@ METHOD(task_manager_t, initiate, status_t,
 	if (this->initiating.type == EXCHANGE_TYPE_UNDEFINED)
 	{
 		message->destroy(message);
-		return SUCCESS;
+		return initiate(this);
 	}
 
 	if (!generate_message(this, message, &this->initiating.packets))
