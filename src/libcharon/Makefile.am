@@ -104,7 +104,8 @@ sa/ikev2/tasks/ike_rekey.c sa/ikev2/tasks/ike_rekey.h \
 sa/ikev2/tasks/ike_reauth.c sa/ikev2/tasks/ike_reauth.h \
 sa/ikev2/tasks/ike_reauth_complete.c sa/ikev2/tasks/ike_reauth_complete.h \
 sa/ikev2/tasks/ike_auth_lifetime.c sa/ikev2/tasks/ike_auth_lifetime.h \
-sa/ikev2/tasks/ike_vendor.c sa/ikev2/tasks/ike_vendor.h
+sa/ikev2/tasks/ike_vendor.c sa/ikev2/tasks/ike_vendor.h \
+sa/ikev2/tasks/ike_verify_peer_cert.c sa/ikev2/tasks/ike_verify_peer_cert.h
 endif
 
 if USE_IKEV1

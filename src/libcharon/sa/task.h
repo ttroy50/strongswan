@@ -57,6 +57,8 @@ enum task_type_t {
 	TASK_IKE_REAUTH,
 	/** completion task for make-before-break IKE_SA re-authentication */
 	TASK_IKE_REAUTH_COMPLETE,
+	/** verify a peer's certificate */
+	TASK_IKE_VERIFY_PEER_CERT,
 	/** delete an IKE_SA */
 	TASK_IKE_DELETE,
 	/** liveness check */
