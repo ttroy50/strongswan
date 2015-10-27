@@ -197,6 +197,11 @@ enum ike_condition_t {
 	 * This IKE_SA is currently being reauthenticated
 	 */
 	COND_REAUTHENTICATING = (1<<10),
+
+	/**
+	 * Online certificate revocation checking is suspended for this IKE_SA
+	 */
+	COND_ONLINE_VALIDATION_SUSPENDED = (1<<11),
 };
 
 /**
