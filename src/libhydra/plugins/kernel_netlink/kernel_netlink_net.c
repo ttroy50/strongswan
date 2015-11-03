@@ -1924,6 +1924,47 @@ METHOD(kernel_net_t, get_nexthop, host_t*,
 }
 
 /**
+ * Manage a local route for an installed IP address
+ */
+static status_t manage_ipaddr_route(private_kernel_netlink_net_t *this,
+						int nlmsg_type, int if_index, host_t *ip, int prefix)
+{
+	netlink_buf_t request;
+	struct nlmsghdr *hdr;
+	struct rtmsg *msg;
+	chunk_t chunk;
+
+	memset(&request, 0, sizeof(request));
+
+	hdr = &request.hdr;
+	hdr->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
+	if (nlmsg_type == RTM_NEWROUTE)
+	{
+		hdr->nlmsg_flags |= NLM_F_CREATE | NLM_F_EXCL;
+	}
+	hdr->nlmsg_type = nlmsg_type;
+	hdr->nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
+
+	chunk = ip->get_address(ip);
+
+	msg = NLMSG_DATA(hdr);
+	msg->rtm_family = ip->get_family(ip);
+	msg->rtm_dst_len = prefix < 0 ? chunk.len * 8 : prefix;
+	msg->rtm_table = this->routing_table;
+	msg->rtm_protocol = RTPROT_STATIC;
+	msg->rtm_type = RTN_LOCAL;
+	msg->rtm_scope = RT_SCOPE_HOST;
+
+	netlink_add_attribute(hdr, RTA_DST, chunk, sizeof(request));
+
+	chunk.ptr = (char*)&if_index;
+	chunk.len = sizeof(if_index);
+	netlink_add_attribute(hdr, RTA_OIF, chunk, sizeof(request));
+
+	return this->socket->send_ack(this->socket, hdr);
+}
+
+/**
  * Manages the creation and deletion of ip addresses on an interface.
  * By setting the appropriate nlmsg_type, the ip will be set or unset.
  */
@@ -1934,6 +1975,7 @@ static status_t manage_ipaddr(private_kernel_netlink_net_t *this, int nlmsg_type
 	struct nlmsghdr *hdr;
 	struct ifaddrmsg *msg;
 	chunk_t chunk;
+	status_t status;
 
 	memset(&request, 0, sizeof(request));
 
@@ -1964,7 +2006,13 @@ static status_t manage_ipaddr(private_kernel_netlink_net_t *this, int nlmsg_type
 		netlink_add_attribute(hdr, IFA_CACHEINFO, chunk_from_thing(cache),
 							  sizeof(request));
 	}
-	return this->socket->send_ack(this->socket, hdr);
+	status = this->socket->send_ack(this->socket, hdr);
+	if (status == SUCCESS && this->routing_table != 0)
+	{
+		nlmsg_type = nlmsg_type == RTM_NEWADDR ? RTM_NEWROUTE : RTM_DELROUTE;
+		return manage_ipaddr_route(this, nlmsg_type, if_index, ip, prefix);
+	}
+	return status;
 }
 
 METHOD(kernel_net_t, add_ip, status_t,
