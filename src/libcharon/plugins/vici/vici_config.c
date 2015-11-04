@@ -1619,8 +1619,8 @@ static void clear_start_action(private_vici_config_t *this,
 	enumerator_t *enumerator, *children;
 	child_sa_t *child_sa;
 	ike_sa_t *ike_sa;
-	u_int32_t id = 0, *del;
-	array_t *ids = NULL;
+	u_int32_t id = 0, *del, others;
+	array_t *ids = NULL, *ikeids = NULL;
 	char *name;
 
 	name = child_cfg->get_name(child_cfg);
@@ -1631,6 +1631,7 @@ static void clear_start_action(private_vici_config_t *this,
 													charon->controller, TRUE);
 			while (enumerator->enumerate(enumerator, &ike_sa))
 			{
+				others = id = 0;
 				children = ike_sa->create_child_sa_enumerator(ike_sa);
 				while (children->enumerate(children, &child_sa))
 				{
@@ -1639,8 +1640,18 @@ static void clear_start_action(private_vici_config_t *this,
 						id = child_sa->get_unique_id(child_sa);
 						array_insert_create(&ids, ARRAY_TAIL, &id);
 					}
+					else if (child_sa->get_state(child_sa) != CHILD_DELETING)
+					{
+						others++;
+					}
 				}
 				children->destroy(children);
+
+				if (id && !others)
+				{
+					id = ike_sa->get_unique_id(ike_sa);
+					array_insert_create(&ikeids, ARRAY_TAIL, &id);
+				}
 			}
 			enumerator->destroy(enumerator);
 
@@ -1653,6 +1664,16 @@ static void clear_start_action(private_vici_config_t *this,
 														*del, NULL, NULL, 0);
 				}
 				array_destroy(ids);
+			}
+			if (array_count(ikeids))
+			{
+				while (array_remove(ikeids, ARRAY_HEAD, &del))
+				{
+					DBG1(DBG_CFG, "closing IKE_SA #%u", *del);
+					charon->controller->terminate_ike(charon->controller,
+														*del, NULL, NULL, 0);
+				}
+				array_destroy(ikeids);
 			}
 			break;
 		case ACTION_ROUTE:
