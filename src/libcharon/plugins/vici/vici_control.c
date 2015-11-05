@@ -164,6 +164,7 @@ CALLBACK(initiate, vici_message_t*,
 	char *child;
 	u_int timeout;
 	bool limits;
+	controller_cb_t log_cb = NULL;
 	log_info_t log = {
 		.dispatcher = this->dispatcher,
 		.id = id,
@@ -178,6 +179,10 @@ CALLBACK(initiate, vici_message_t*,
 	{
 		return send_reply(this, "missing configuration name");
 	}
+	if (timeout >= 0)
+	{
+		log_cb = (controller_cb_t)log_vici;
+	}
 
 	DBG1(DBG_CFG, "vici initiate '%s'", child);
 
@@ -187,7 +192,7 @@ CALLBACK(initiate, vici_message_t*,
 		return send_reply(this, "CHILD_SA config '%s' not found", child);
 	}
 	switch (charon->controller->initiate(charon->controller, peer_cfg,
-				child_cfg, (controller_cb_t)log_vici, &log, timeout, limits))
+									child_cfg, log_cb, &log, timeout, limits))
 	{
 		case SUCCESS:
 			return send_reply(this, NULL);
